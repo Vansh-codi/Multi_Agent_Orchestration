@@ -1,7 +1,7 @@
 {
   // ── Python interpreter ──────────────────────────────────────
   // Points to the virtual environment created by setup.sh
-  "python.defaultInterpreterPath": "C:/Users/Vansh Jain/myvenv/Scripts/python.exe",
+  "python.defaultInterpreterPath": "C:/Users/myvenv/Scripts/python.exe",
 
   // ── Linting & formatting ────────────────────────────────────
   "editor.formatOnSave": true,
