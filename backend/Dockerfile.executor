@@ -1,0 +1,44 @@
+# FROM python:3.11-slim
+
+# WORKDIR /app
+
+# COPY runner.py /app/runner.py
+
+# CMD ["python", "runner.py"]
+
+# FROM python:3.11-slim
+
+# WORKDIR /app
+
+# RUN pip install --no-cache-dir \
+#     numpy \
+#     pandas \
+#     matplotlib \
+#     scipy \
+#     scikit-learn
+
+# COPY runner.py /app/runner.py
+
+# CMD ["python", "runner.py"]
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    nodejs \
+    npm \
+    default-jdk \
+    golang-go \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    numpy \
+    pandas \
+    matplotlib \
+    scipy \
+    scikit-learn
+COPY runner.py /app/runner.py
+CMD ["python", "runner.py"]

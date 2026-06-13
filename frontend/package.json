@@ -1,0 +1,33 @@
+{
+  "name": "agentops-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.10.2",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.16.0",
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.5.15",
+    "prettier": "^3.3.2",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.5.3"
+  }
+}
