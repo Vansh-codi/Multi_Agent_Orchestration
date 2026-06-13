@@ -140,6 +140,43 @@ Admin sets `maintenance_mode = true` + a message via `PATCH /admin/maintenance`.
 
 ---
 
+## Redis — event bus & cache
+
+Redis serves two roles in AgentOps:
+
+### 1. Pub/Sub event bus (`bus/redis_bus.py`)
+
+Every agent step publishes an event to a Redis channel. The WebSocket handler (`ws/stream.py`) subscribes and forwards events to the browser in real time. This decouples agents from the WebSocket layer — agents just publish, the stream layer handles delivery.
+
+```
+Agent completes a step
+        │
+        ▼
+Redis PUBLISH  →  ws/stream.py subscribes  →  WebSocket  →  browser
+```
+
+### 2. Response cache (`services/cache.py`)
+
+Frequently repeated lookups (preferences, user data) are cached in Redis to avoid hitting PostgreSQL on every agent step.
+
+### Local setup
+
+Redis is included in `docker-compose.yml` — no separate install needed:
+
+```bash
+docker compose up -d   # starts both Postgres and Redis
+```
+
+### Production
+
+Use **Upstash** (serverless Redis, free tier available). Set `REDIS_URL` in your deployment dashboard.
+
+```env
+REDIS_URL=rediss://default:your_password@your-endpoint.upstash.io:6379
+```
+
+---
+
 ## Quick start (3 steps)
 
 ### Step 1 — Clone and run setup
@@ -198,20 +235,26 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### Backend (`.env`)
 
-| Variable               | Required | Description                                     |
-| ---------------------- | -------- | ----------------------------------------------- |
-| `GROQ_API_KEY`         | Yes      | Default LLM — llama-3.3-70b-versatile           |
-| `OPENAI_API_KEY`       | No       | Optional fallback LLM                           |
-| `SERPAPI_KEY`          | Yes      | System-level web search fallback                |
-| `POSTGRES_USER`        | Yes      | DB username                                     |
-| `POSTGRES_PASSWORD`    | Yes      | DB password                                     |
-| `POSTGRES_DB`          | Yes      | DB name                                         |
-| `SUPABASE_URL`         | Yes      | Supabase project URL                            |
-| `SUPABASE_KEY`         | Yes      | Supabase service role key                       |
-| `REDIS_URL`            | Auto     | Built from host/port                            |
-| `DATABASE_URL`         | Auto     | Built from Postgres vars                        |
-| `MAX_AGENT_ITERATIONS` | No       | Loop safety ceiling (default: `10`)             |
-| `MAX_EXEC_TIME`        | No       | Code sandbox timeout in seconds (default: `30`) |
+| Variable               | Required | Description                                            |
+| ---------------------- | -------- | ------------------------------------------------------ |
+| `GROQ_API_KEY`         | Yes      | Default LLM — llama-3.3-70b-versatile                  |
+| `OPENAI_API_KEY`       | No       | Optional fallback LLM                                  |
+| `SERPAPI_KEY`          | Yes      | System-level web search fallback                       |
+| `POSTGRES_USER`        | Yes      | DB username                                            |
+| `POSTGRES_PASSWORD`    | Yes      | DB password                                            |
+| `POSTGRES_DB`          | Yes      | DB name                                                |
+| `SUPABASE_URL`         | Yes      | Supabase project URL                                   |
+| `SUPABASE_KEY`         | Yes      | Supabase service role key                              |
+| `REDIS_URL`            | Auto     | Built from host/port                                   |
+| `DATABASE_URL`         | Auto     | Built from Postgres vars                               |
+| `JWT_SECRET`           | Yes      | Secret key for signing JWT tokens                      |
+| `GOOGLE_CLIENT_ID`     | No       | Google OAuth client ID (enables Google login)          |
+| `GOOGLE_CLIENT_SECRET` | No       | Google OAuth client secret                             |
+| `FRONTEND_URL`         | Yes      | Used for OAuth redirect (e.g. `http://localhost:3000`) |
+| `BACKEND_URL`          | Yes      | Used for OAuth callback (e.g. `http://localhost:8000`) |
+| `COOKIE_SECURE`        | No       | Set `true` in production for HTTPS-only cookies        |
+| `MAX_AGENT_ITERATIONS` | No       | Loop safety ceiling (default: `10`)                    |
+| `MAX_EXEC_TIME`        | No       | Code sandbox timeout in seconds (default: `30`)        |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -224,14 +267,59 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Authentication & API key vault
 
-- Email / password signup and login (`routes/auth.py`)
-- JWT session tokens
-- Per-user API key storage (`routes/apikeys.py`) — users save their own:
-  - Groq API key
-  - SerpAPI key
-  - GitHub personal access token
-- Connection test endpoint (verify Groq key before running)
-- Keys are stored per-user in the DB; the Researcher agent uses the user's SerpAPI key if present, falling back to the system key
+### Auth methods
+
+Two ways to sign in — both issue the same `agentops_token` HttpOnly cookie:
+
+| Method           | How                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Email / password | `POST /auth/signup` and `POST /auth/login`                                           |
+| Google OAuth 2.0 | `GET /auth/google/login` → Google → callback → cookie set → redirect to `/dashboard` |
+
+### Session model
+
+- JWT tokens signed with `HS256` and a `jti` (unique token ID) stored in the `sessions` table
+- Every protected request validates the token **and** checks the session is not revoked in the DB
+- `POST /auth/logout` marks the session `revoked = TRUE` — the token cannot be reused even if it hasn't expired
+- Account deletion (`DELETE /auth/account`) revokes all active sessions for that user before removing the row
+- Cookie is `httponly=True`, `samesite="lax"`, `secure=True` in production (`COOKIE_SECURE` env var)
+
+### Password rules (enforced on signup and password change)
+
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+
+### Rate limiting (slowapi)
+
+| Endpoint            | Limit                      |
+| ------------------- | -------------------------- |
+| `POST /auth/signup` | 3 requests / minute per IP |
+| `POST /auth/login`  | 5 requests / minute per IP |
+
+### User profile endpoints
+
+| Endpoint               | What it does                                     |
+| ---------------------- | ------------------------------------------------ |
+| `GET /auth/me`         | Returns current user info                        |
+| `PATCH /auth/profile`  | Update display name                              |
+| `PATCH /auth/password` | Change password (requires current password)      |
+| `DELETE /auth/account` | Permanently delete account + revoke all sessions |
+
+### Frontend route protection
+
+`middleware.ts` runs on every request before the page loads. If no `agentops_token` cookie is present the user is redirected to `/login?from=<original-path>` so they land back where they were after signing in. Public paths (`/login`, `/signup`, `/_next`, `/favicon.ico`) are always allowed through.
+
+### API key vault
+
+Per-user key storage (`routes/apikeys.py`) — each user can save their own:
+
+- Groq API key
+- SerpAPI key (Researcher uses this first, falls back to system key)
+- GitHub personal access token
+
+A connection test endpoint lets users verify their Groq key before running any agent.
 
 ---
 
@@ -282,14 +370,43 @@ Stats available at `/tools/stats` (document count, chunk count) and `/tools/jobs
 
 ## Secure code execution
 
-Generated code runs inside an isolated Docker container (`Dockerfile.executor` + `tools/docker_executor.py`):
+Generated code never runs on the host. The Coder agent writes the file, then `docker_executor.py` spins up a fresh container, runs it, captures stdout/stderr, and destroys the container — all in one call.
 
-- Memory and CPU limits enforced by Docker
-- No network access from inside the sandbox
-- `MAX_EXEC_TIME` timeout kills runaway processes
-- Separate executor module per language
+### Sandbox constraints (enforced by Docker flags)
 
-**Supported languages:** Python · JavaScript · TypeScript · C · C++ · Go · Java
+| Constraint         | Value                                      |
+| ------------------ | ------------------------------------------ |
+| Memory limit       | `--memory=128m`                            |
+| CPU limit          | `--cpus=1`                                 |
+| Network            | `--network=none` (no internet access)      |
+| File system        | code file mounted read-only at `/tmp/code` |
+| Timeout            | 20 seconds (`subprocess` hard kill)        |
+| Container lifetime | `--rm` — destroyed immediately after run   |
+
+### Executor image (`Dockerfile.executor`)
+
+Built on `python:3.11-slim` with all runtimes installed in one image:
+
+```
+gcc / g++   → C and C++
+nodejs/npm  → JavaScript and TypeScript
+default-jdk → Java
+golang-go   → Go
+```
+
+Python scientific stack also included: `numpy`, `pandas`, `matplotlib`, `scipy`, `scikit-learn`.
+
+Build the image once before running:
+
+```bash
+docker build -f backend/Dockerfile.executor -t agent-executor .
+```
+
+### Supported languages
+
+Python · JavaScript · TypeScript · C · C++ · Go · Java
+
+Each language has its own executor module (`executors/`) that handles compilation steps where needed (C, C++, Java, Go) before running.
 
 ---
 
@@ -451,14 +568,20 @@ agentops/
 
 ## Security
 
-- No secrets in source — every key loaded from `.env` via `pydantic-settings`
-- `.env` is git-ignored; only `.env.example` (placeholder values) is committed
-- `config.py` is the single gateway — all modules call `get_settings()`, never `os.environ`
-- Admin routes check `user["role"] == "admin"` server-side on every request
-- Code execution sandboxed in Docker — memory/CPU limits, no network
-- Per-user file and key isolation — no cross-user data access
-- `docker-compose.yml` reads `${VAR}` from `.env` — no inline passwords
-- Frontend `NEXT_PUBLIC_` prefix used only for non-secret URLs
+| Layer              | What is protected                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| Secrets            | All keys in `.env`, loaded via `pydantic-settings` — never hardcoded                         |
+| Git                | `.env` is git-ignored; only `.env.example` with placeholders is committed                    |
+| Config             | `config.py` is the single gateway — `get_settings()` everywhere, never `os.environ` directly |
+| Auth cookie        | `httponly`, `samesite=lax`, `secure=true` in production — not readable by JS                 |
+| Session revocation | JWT `jti` stored in DB; logout and account-delete mark sessions revoked server-side          |
+| Rate limiting      | Signup capped at 3/min, login at 5/min per IP via slowapi                                    |
+| Admin routes       | `require_admin()` checks `role == "admin"` on every `/admin/*` endpoint server-side          |
+| Route protection   | Next.js middleware redirects unauthenticated requests to `/login` before page loads          |
+| Code sandbox       | Docker `--memory=128m --cpus=1 --network=none --rm` — no host access, destroyed after run    |
+| File isolation     | Each user's uploads and API keys are scoped by `user_id` — no cross-user access              |
+| Docker Compose     | Reads `${VAR}` from `.env` — no inline passwords in `docker-compose.yml`                     |
+| Frontend env       | Only `NEXT_PUBLIC_` vars (non-secret URLs) are exposed to the browser                        |
 
 ---
 
