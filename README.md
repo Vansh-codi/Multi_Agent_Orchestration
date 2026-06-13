@@ -1,3 +1,15 @@
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![LangGraph](https://img.shields.io/badge/LangGraph-Agentic-orange)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-black?logo=jsonwebtokens)
+![RAG](https://img.shields.io/badge/RAG-Knowledge%20Retrieval-purple)
+![WebSocket](https://img.shields.io/badge/WebSocket-Real--Time-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 # AgentOps — Multi-Agent Task Runner
 
 **LangGraph · FastAPI · Next.js 14 · PostgreSQL · Redis · Supabase · Groq**
@@ -5,6 +17,25 @@
 You give it a goal in plain English. A Supervisor agent decomposes it into a task DAG, routes subtasks to specialist agents, and streams live progress back to your browser over WebSocket. Admins get a full control panel; regular users get a clean agent workspace with RAG, GitHub automation, and real-time execution logs.
 
 ---
+<img width="5120" height="2560" alt="agentops_social_preview_banner" src="https://github.com/user-attachments/assets/0e084540-a00f-44f5-8d10-381e59bcd294" />
+
+## Why AgentOps?
+
+Most AI applications expose a single LLM call.
+
+AgentOps demonstrates how to build production-grade agent systems using:
+
+- Planning
+- Research
+- Code generation
+- Critique
+- Tool calling
+- Retrieval-Augmented Generation (RAG)
+- Secure code execution
+- Real-time observability
+
+inside a scalable full-stack architecture.
+
 
 ## Features
 
