@@ -74,3 +74,4 @@ temp/
 
 # LangGraph / Agent outputs
 *.jsonl
+.vscode/
