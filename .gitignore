@@ -2,7 +2,7 @@
 .env
 .env.local
 .env.*.local
-
+.env.*
 # ── Python ──────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
@@ -75,3 +75,11 @@ temp/
 # LangGraph / Agent outputs
 *.jsonl
 .vscode/
+*.png
+debug_capture.png
+.orion-token
+token.json
+auth.json
+db.sqlite
+users.db
+backup.sql
