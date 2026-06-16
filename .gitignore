@@ -83,3 +83,5 @@ auth.json
 db.sqlite
 users.db
 backup.sql
+desktop/dist/
+desktop/release/
