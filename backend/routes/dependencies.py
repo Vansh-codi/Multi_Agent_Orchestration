@@ -1,5 +1,5 @@
 
-from fastapi import Cookie, HTTPException, status
+from fastapi import Cookie, HTTPException, status,Header
 import jwt
 
 from config import get_settings
@@ -12,10 +12,16 @@ ALGORITHM = "HS256"
 
 
 async def get_current_user(
-    agentops_token: str | None = Cookie(default=None)
+    agentops_token: str | None = Cookie(default=None),
+    authorization: str | None = Header(default=None),
 ):
+    token = agentops_token
 
-    if not agentops_token:
+    if not token and authorization:
+        if authorization.startswith("Bearer "):
+            token = authorization[7:]
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
@@ -24,7 +30,8 @@ async def get_current_user(
     try:
 
         payload = jwt.decode(
-            agentops_token,
+            token,
+            # agentops_token,
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
@@ -98,3 +105,6 @@ async def get_current_user(
             status_code=401,
             detail="Invalid token"
         )
+    print("COOKIE:", agentops_token)
+    print("AUTH:", authorization)
+    print("TOKEN:", token)

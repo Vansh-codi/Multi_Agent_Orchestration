@@ -5,6 +5,7 @@ import Hero from "@/components/agentops/Hero";
 import MaintenancePage from "@/components/agentops/MaintenancePage";
 import SettingsPage from "@/components/agentops/SettingsPage";
 import Sidebar from "@/components/agentops/Sidebar";
+// import OrionPage from "@/components/orion/OrionPage";
 import ToolsPage from "@/components/agentops/toolspage";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useState } from "react";
@@ -55,8 +56,8 @@ export default function DashboardPage() {
         {activePage === "History" && (
           <div className="p-6 text-zinc-500 text-sm">History — coming soon</div>
         )}
-        {activePage === "Agents" && (
-          <div className="p-6 text-zinc-500 text-sm">Agents — coming soon</div>
+        {activePage === "Orion" && (
+          <iframe src="/orion" className="w-full h-screen border-0" />
         )}
         {activePage === "Tools" && <ToolsPage />}
 

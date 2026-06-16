@@ -112,16 +112,6 @@ def merge_results(existing: dict, new: dict) -> dict:
     return {**existing, **new}
 
 
-# class AgentState(TypedDict):
-#     goal:          str
-#     messages:      Annotated[list, add_messages]  # ← fix 1
-#     plan:          list
-#     results:       Annotated[dict, merge_results]  # ← fix 2
-#     next:          str
-#     approved:      bool
-#     error:         Optional[str]
-#     context_files: list
-#     user_id:       str
 
 
 class AgentState(TypedDict):

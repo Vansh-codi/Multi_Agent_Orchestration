@@ -1,0 +1,38 @@
+{
+  "name": "orion-desktop",
+  "version": "1.0.0",
+  "description": "Orion — AgentOps floating AI assistant",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc && node -e \"require('fs').copyFileSync('src/overlay.html','dist/overlay.html')\" && electron dist/main.js",
+    "build": "tsc && node -e \"require('fs').copyFileSync('src/overlay.html','dist/overlay.html')\"",
+    "start": "electron dist/main.js",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.agentops.orion",
+    "productName": "Orion",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "src/overlay.html"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    }
+  }
+}

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<!-- desktop/src/overlay.html — secured -->
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  #wrap {
+    background: rgba(8,8,8,0.94);
+    border: 1px solid #1d9e75;
+    border-radius: 16px;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    padding: 10px 14px;
+    margin: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(29,158,117,0.15);
+  }
+  #drag {
+    -webkit-app-region: drag;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 10px;
+    cursor: grab;
+    border-radius: 16px 16px 0 0;
+  }
+  #row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-app-region: no-drag;
+  }
+  #logo {
+    font-size: 14px;
+    font-weight: 900;
+    color: #1d9e75;
+    font-family: monospace;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  #input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f1f5f9;
+    font-size: 13px;
+    caret-color: #1d9e75;
+    min-width: 0;
+  }
+  #input::placeholder { color: #2a2a2a; }
+  #ss-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  #ss-toggle label {
+    font-size: 10px;
+    font-family: monospace;
+    color: #374151;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #ss-toggle input[type=checkbox] {
+    accent-color: #1d9e75;
+    width: 12px; height: 12px;
+    cursor: pointer;
+  }
+  #ss-toggle.active label { color: #1d9e75; }
+  #ss-btn {
+    background: none;
+    border: 1px solid #1a2a22;
+    border-radius: 6px;
+    color: #1d4030;
+    cursor: pointer;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-family: monospace;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  #ss-btn:hover { border-color: #1d9e75; color: #1d9e75; }
+  #ss-btn.taken { border-color: #1d9e75; color: #1d9e75; background: #0f2d24; }
+  #ask-btn {
+    background: #0f6e56;
+    border: 1px solid #1d9e75;
+    border-radius: 8px;
+    color: #e1f5ee;
+    cursor: pointer;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+  #ask-btn:hover:not(:disabled) { background: #1d9e75; color: #000; }
+  #ask-btn:disabled { opacity: 0.3; cursor: default; }
+  #close {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    line-height: 1;
+    -webkit-app-region: no-drag;
+  }
+  #close:hover { color: #ef4444; }
+  #ss-preview {
+    display: none;
+    margin-top: 6px;
+    padding: 4px 8px;
+    background: #0f2d24;
+    border: 1px solid #1d9e75;
+    border-radius: 8px;
+    font-size: 10px;
+    font-family: monospace;
+    color: #5dcaa5;
+    align-items: center;
+    gap: 6px;
+  }
+  #ss-preview.show { display: flex; }
+  #ss-clear {
+    background: none;
+    border: none;
+    color: #1d4030;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0;
+    margin-left: auto;
+  }
+  #ss-clear:hover { color: #ef4444; }
+  #status {
+    display: none;
+    margin-top: 8px;
+    font-size: 10px;
+    font-family: monospace;
+    color: #1d9e75;
+    align-items: center;
+    gap: 5px;
+  }
+  #status.show { display: flex; }
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #1d9e75;
+    animation: pulse 0.9s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.2; }
+  }
+  #logout {
+  background:none;
+  border:none;
+  color:#6b7280;
+  cursor:pointer;
+  font-size:12px;
+  padding:0 4px;
+}
+
+#logout:hover {
+  color:#f59e0b;
+}
+  #answer {
+    display: none;
+    margin-top: 10px;
+    border-top: 1px solid #0f2d24;
+    padding-top: 10px;
+    color: #d1d5db;
+    font-size: 12px;
+    line-height: 1.75;
+    max-height: 480px;
+    overflow-y: auto;
+    word-break: break-word;
+    -webkit-app-region: no-drag;
+  }
+  #answer.show { display: block; }
+  #answer code {
+    display: block;
+    background: #0a0a0a;
+    border: 1px solid #1a2a22;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #5dcaa5;
+    margin: 6px 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  #privacy {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+    font-size: 9px;
+    font-family: monospace;
+    color: #0f2d24;
+  }
+  #privacy span.hi { color: #1d4030; }
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { background: #1a2a22; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="drag"></div>
+<div id="wrap">
+  <div id="row">
+    <span id="logo">⬡ Orion</span>
+    <input id="input" type="text"
+      placeholder="Ask anything… Enter to send, Esc to close"
+      autocomplete="off" spellcheck="false" />
+    <div id="ss-toggle" title="Auto-capture screen when asking">
+      <input type="checkbox" id="auto-ss" />
+      <label for="auto-ss">📷 auto</label>
+    </div>
+    <button id="ss-btn" title="Take screenshot now">📸 snap</button>
+    <button id="ask-btn">Ask</button>
+    <button id="logout" title="Logout">⇦</button>
+    <button id="close" title="Close (Esc)">✕</button>
+  </div>
+
+  <div id="ss-preview">
+    <span>📷 screenshot ready</span>
+    <span style="color:#1d4030;font-size:9px">→ local ollama only</span>
+    <button id="ss-clear">✕</button>
+  </div>
+
+  <div id="status">
+    <div class="dot"></div>
+    <span id="status-text">thinking...</span>
+  </div>
+
+  <div id="answer"></div>
+
+  <div id="privacy">
+    <span>🔒</span>
+    <span class="hi" id="privacy-text">screenshots processed locally · only text reaches cloud · memory stored in your DB</span>
+  </div>
+</div>
+
+<script>
+  const input     = document.getElementById("input")
+  const askBtn    = document.getElementById("ask-btn")
+  const closeBtn  = document.getElementById("close")
+  const logoutBtn = document.getElementById("logout")
+  const answer    = document.getElementById("answer")
+  const status    = document.getElementById("status")
+  const statusTxt = document.getElementById("status-text")
+  const ssBtn     = document.getElementById("ss-btn")
+  const ssPreview = document.getElementById("ss-preview")
+  const ssClear   = document.getElementById("ss-clear")
+  const autoSsEl  = document.getElementById("auto-ss")
+  const privTxt   = document.getElementById("privacy-text")
+
+  let screenshotB64 = null
+  let loading = false
+  let loggedIn = false
+  let loginEmail = ""
+  let loginPassword = ""
+
+  // ── Focus input when window opens ────────────────────────────
+  window.electronAPI.onShown(() => {
+    input.focus()
+    input.select()
+  })
+  window.electronAPI.getToken().then(token => {
+  if (token) {
+    loggedIn = true
+    askBtn.textContent = "Ask"
+    input.placeholder =
+      "Ask anything... Enter to send, Esc to close"
+  } else {
+    askBtn.textContent = "Verify"
+    input.placeholder =
+      "email password"
+  }
+})
+  
+  // ── Keyboard ─────────────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      forceReset()
+      window.electronAPI.hide()
+    }
+    if (e.key === "Enter" && !e.shiftKey && document.activeElement === input) {
+      e.preventDefault()
+      send()
+    }
+  })
+
+  // ── Close button — force reset loading state ──────────────────
+  closeBtn.addEventListener("click", () => {
+    forceReset()
+    window.electronAPI.hide()
+  })
+
+  // ── Screenshot via Python mss (Orion hides first) ─────────────
+  async function captureScreen() {
+    if (!loggedIn)
+      return null
+      // ── Ensure logged in first ─────────────────────────────
+  // if (!loggedIn) {
+  //   try {
+  //     await window.electronAPI.login("gj@gmail.com", "Gaj123456789")
+  //     loggedIn = true
+  //   } catch (e) {
+  //     console.error("Login failed:", e)
+  //     return null
+  //   }
+  // }
+    const token = await window.electronAPI.getToken()
+
+    // Hide Orion so it's not in the screenshot
+    window.electronAPI.hide()
+
+    // Wait for OS to composit the hide
+    await new Promise(r => setTimeout(r, 600))
+    const b64 = await window.electronAPI.captureScreen()
+    window.electronAPI.show()
+    return b64 || null
+
+    try {
+      const res = await fetch("http://localhost:8000/assistant/screenshot", {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+      const data = await res.json()
+
+      // Show Orion again
+      window.electronAPI.show()
+      console.log("Backend screenshot status:", res.status)
+      console.log("Backend B64 length:", data.screenshot?.length)
+      console.log("Error from backend:", data.error)
+      return data.screenshot || null
+    } catch (err) {
+      window.electronAPI.show()
+      return null
+    }
+  }
+  logoutBtn.addEventListener("click", () => {
+
+  window.electronAPI.logout()
+
+  loggedIn = false
+
+  input.value = ""
+
+  askBtn.textContent = "Verify"
+
+  input.placeholder = "email password"
+
+  answer.classList.remove("show")
+  answer.innerHTML = ""
+
+  clearScreenshot()
+  window.electronAPI.collapse()
+})
+  // ── Manual screenshot button ──────────────────────────────────
+  ssBtn.addEventListener("click", async () => {
+    ssBtn.textContent = "📸 capturing..."
+    ssBtn.disabled = true
+
+    const b64 = await captureScreen()
+
+    ssBtn.disabled = false
+    if (b64) {
+      screenshotB64 = b64
+      ssBtn.textContent = "📸 retake"
+      ssBtn.classList.add("taken")
+      ssPreview.classList.add("show")
+    } else {
+      ssBtn.textContent = "📸 failed"
+      setTimeout(() => { ssBtn.textContent = "📸 snap" }, 1500)
+    }
+  })
+
+  ssClear.addEventListener("click", clearScreenshot)
+
+  autoSsEl.addEventListener("change", () => {
+    document.getElementById("ss-toggle").classList.toggle("active", autoSsEl.checked)
+  })
+
+  askBtn.addEventListener("click", send)
+
+  // ── Send ──────────────────────────────────────────────────────
+  async function send() {
+    const text = input.value.trim()
+
+    if (!text || loading)
+      return
+
+    // ── Login Mode ─────────────────────────────────────────
+    if (!loggedIn) {
+
+      const parts = text.split(" ")
+
+      if (parts.length < 2) {
+        answer.classList.add("show")
+        answer.textContent =
+          "Enter: email password"
+        return
+      }
+
+      const email = parts[0]
+      const password = parts.slice(1).join(" ")
+
+      try {
+
+        await window.electronAPI.login(
+          email,
+          password
+        )
+
+        loggedIn = true
+
+        input.value = ""
+
+        input.placeholder =
+          "Ask anything..."
+
+        askBtn.textContent =
+          "Ask"
+
+        answer.classList.add("show")
+        answer.textContent =
+          "✓ Verified"
+        setTimeout(() => {
+          answer.classList.remove("show")
+          answer.innerHTML = ""
+        }, 1500)
+
+      } catch {
+
+        answer.classList.add("show")
+        answer.textContent =
+          "Invalid email or password"
+      }
+
+      return
+    }
+
+    const question = text
+    // const question = input.value.trim()
+    // if (!question || loading) return
+
+    loading = true
+    askBtn.disabled = true
+    answer.classList.remove("show")
+    answer.innerHTML = ""
+
+    // ── Auto screenshot ───────────────────────────────────────
+    if (autoSsEl.checked && !screenshotB64) {
+      setStatus("capturing screen...")
+      screenshotB64 = await captureScreen()
+      if (screenshotB64) {
+        ssPreview.classList.add("show")
+        ssBtn.classList.add("taken")
+        ssBtn.textContent = "📸 retake"
+      }
+    }
+
+    setStatus(screenshotB64 ? "reading screen locally..." : "thinking...")
+
+    try {
+      // ── Login once ──────────────────────────────────────────
+      // if (!loggedIn) {
+      //   const email    = "gj@gmail.com"
+      //   const password = "Gaj123456789"
+      //   await window.electronAPI.login(email, password)
+      //   loggedIn = true
+      // }
+
+      const body = {
+        question,
+        screenshot:  screenshotB64 || undefined,
+        pasted_text: screenshotB64 ? undefined : undefined,
+      }
+
+      const token = await window.electronAPI.getToken()
+      const res = await fetch("http://localhost:8000/assistant/ask/stream", {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) throw new Error("HTTP " + res.status)
+
+      const reader  = res.body.getReader()
+      const decoder = new TextDecoder()
+      let fullText  = ""
+
+      hideStatus()
+      answer.classList.add("show")
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const lines = decoder.decode(value).split("\n")
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue
+          try {
+            const data = JSON.parse(line.slice(6))
+
+            if (data.status) setStatus(data.status)
+
+            if (data.token) {
+              hideStatus()
+              answer.classList.add("show")
+              fullText += data.token
+              answer.innerHTML = renderMd(fullText)
+
+              // ── Delay expand so window is visible first ─────
+              setTimeout(() => {
+                const h = Math.min(80 + answer.scrollHeight + 100, 620)
+                window.electronAPI.expand(h)
+                answer.scrollTop = answer.scrollHeight
+              }, 50)
+            }
+
+            if (data.done) {
+              input.value = ""
+              loading = false
+              askBtn.disabled = false
+              clearScreenshot()
+            }
+          } catch (_) {}
+        }
+      }
+
+    } catch (err) {
+      console.error("ORION ERROR:", err)
+      hideStatus()
+      answer.classList.add("show")
+      answer.textContent = "ERROR: " + (err?.message || String(err))
+      loading = false
+      askBtn.disabled = false
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function setStatus(msg) {
+    statusTxt.textContent = msg
+    status.classList.add("show")
+  }
+
+  function hideStatus() { status.classList.remove("show") }
+
+  function clearScreenshot() {
+    screenshotB64 = null
+    ssPreview.classList.remove("show")
+    ssBtn.classList.remove("taken")
+    ssBtn.textContent = "📸 snap"
+  }
+
+  // ── Force reset — clears loading state even if mid-request ───
+  function forceReset() {
+    loading = false
+    askBtn.disabled = false
+    answer.classList.remove("show")
+    answer.innerHTML = ""
+    hideStatus()
+    input.value = ""
+    clearScreenshot()
+    window.electronAPI.collapse()
+  }
+
+  // ── XSS-safe markdown renderer ────────────────────────────────
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g,  "&amp;")
+      .replace(/</g,  "&lt;")
+      .replace(/>/g,  "&gt;")
+      .replace(/"/g,  "&quot;")
+      .replace(/'/g,  "&#39;")
+  }
+
+  function renderMd(raw) {
+    const parts = raw.split(/(```[\w]*\n[\s\S]*?```)/g)
+    return parts.map(part => {
+      const codeMatch = part.match(/```([\w]*)\n([\s\S]*?)```/)
+      if (codeMatch) {
+        return "<code>" + escapeHtml(codeMatch[2]) + "</code>"
+      }
+      let escaped = escapeHtml(part)
+      escaped = escaped.replace(/`([^`]+)`/g,
+        '<code style="display:inline;padding:1px 5px">$1</code>')
+      escaped = escaped.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      escaped = escaped.replace(/\n/g, "<br>")
+      return escaped
+    }).join("")
+  }
+</script>
+</body>
+</html>

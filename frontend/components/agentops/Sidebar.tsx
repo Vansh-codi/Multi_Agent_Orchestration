@@ -18,7 +18,7 @@ import { useState } from "react";
 const items = [
   { label: "Dashboard", icon: LayoutDashboard },
   { label: "History", icon: History },
-  { label: "Agents", icon: Bot },
+  { label: "Orion", icon: Bot },
   { label: "Tools", icon: Wrench },
   { label: "Memory", icon: Database },
   { label: "Settings", icon: Settings },

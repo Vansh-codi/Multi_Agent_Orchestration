@@ -43,6 +43,8 @@ from routes.system import router as system_router
 from config import get_settings
 from starlette.middleware.sessions import SessionMiddleware
 from routes.preferences import router as preferences_router
+from routes.assistant import router as assistant_router
+
 settings = get_settings()
 from services.suggestion import (
     add_suggestions,
@@ -118,6 +120,7 @@ app.include_router(generated_files_router)
 app.include_router(system_router)
 app.include_router(plan_router)
 app.include_router(apikeys_router)
+app.include_router(assistant_router)
 app.include_router(github_router)
 app.include_router(updates_router)
 app.include_router(preferences_router)

@@ -1,5 +1,3 @@
-
-
 # backend/config.py
 # ──────────────────────────────────────────────────────────────
 #  Single source of truth for all configuration.
@@ -7,8 +5,9 @@
 # ──────────────────────────────────────────────────────────────
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
+import os
+from pathlib import Path
+ENV_FILE = Path(__file__).parent.parent / ".env"
 class Settings(BaseSettings):
 
     # LLM
@@ -34,34 +33,53 @@ class Settings(BaseSettings):
 
     # Search
     serpapi_key: str
+
     # Google OAuth
-    google_client_id: str | None = None
+    google_client_id:     str | None = None
     google_client_secret: str | None = None
-    backend_url: str = "http://localhost:8000"
-    frontend_url: str = "http://localhost:3000"
+    backend_url:          str = "http://localhost:8000"
+    frontend_url:         str = "http://localhost:3000"
 
     # Supabase
     supabase_url: str | None = None
     supabase_key: str | None = None
-    # config.py — add to Settings class
+
+    # Anthropic
     anthropic_api_key: str | None = None
+
+    # ── Orion waterfall providers (all optional) ──────────────────────────────
+    # Waterfall order: Groq → Cerebras → Gemini → SambaNova → Together → HuggingFace → Ollama
+    # Sign up links (all free):
+    #   Cerebras   → cloud.cerebras.ai
+    #   Gemini     → aistudio.google.com
+    #   SambaNova  → cloud.sambanova.ai
+    #   Together   → together.ai  ($25 free credit)
+    #   HuggingFace→ huggingface.co
+    #   Ollama     → local, no key needed — just run `ollama serve`
+    cerebras_api_key:   str = ""
+    gemini_api_key:     str = ""
+    sambanova_api_key:  str = ""
+    together_api_key:   str = ""
+    huggingface_api_key: str = ""
+
     # App
-    environment:              str = "development"
-    log_level:                str = "INFO"
-    max_agent_iterations:     int = 10
+    environment:               str = "development"
+    log_level:                 str = "INFO"
+    max_agent_iterations:      int = 10
     code_exec_timeout_seconds: int = 10
-   
-    allowed_origins:          str = "http://localhost:3000"
+    allowed_origins:           str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
-        env_file="../.env",
+         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         case_sensitive=False,
-    )
+         extra="ignore",
+    ) 
 
     @property
     def cookie_secure(self) -> bool:
         return self.environment == "production"
+
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",")]
@@ -72,4 +90,4 @@ def get_settings() -> Settings:
     settings = Settings()
     if len(settings.jwt_secret) < 32:
         raise ValueError("JWT_SECRET must be at least 32 characters")
-    return Settings()
+    return settings
