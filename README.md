@@ -53,6 +53,174 @@ inside a scalable full-stack architecture.
 - User-facing Platform Updates page — release notes, maintenance banners, system status
 
 ---
+## Orion Desktop Assistant
+
+Orion is AgentOps' native desktop AI assistant built with Electron.
+
+It provides instant access to AgentOps anywhere on your computer using a global shortcut, allowing users to capture screen context, understand content, and interact with AI without opening a browser.
+
+---
+
+## Features
+
+- Global launcher (`Ctrl + Space`)
+- Floating always-on-top assistant
+- Secure account verification using AgentOps authentication
+- Screenshot capture and screen understanding
+- Local OCR extraction for privacy-first processing
+- Vision-based fallback for complex screens
+- Memory-aware conversations powered by AgentOps
+- Real-time streaming responses
+- Lightweight desktop overlay UI
+- Windows installer (`Orion Setup.exe`)
+- AgentOps account integration
+- Context-aware assistance across applications
+
+---
+
+## Privacy First Architecture
+
+Orion is designed to minimize the amount of data sent to the cloud.
+
+```text
+Screenshot
+    │
+    ▼
+Local OCR Processing
+    │
+    ▼
+Extracted Text Only
+    │
+    ▼
+AgentOps Cloud
+```
+
+For most workflows, only extracted text is sent to the backend.
+
+Images are processed through vision models only when OCR confidence is insufficient or advanced visual understanding is required.
+
+---
+
+## Orion Workflow
+
+```text
+User presses Ctrl + Space
+            │
+            ▼
+       Orion Opens
+            │
+            ▼
+ Capture Screenshot
+            │
+            ▼
+ Local OCR / Vision
+            │
+            ▼
+ AgentOps Assistant
+            │
+            ▼
+      AI Response
+```
+
+---
+
+## Example Use Cases
+
+### Code Review
+
+- Review VS Code projects
+- Explain errors and warnings
+- Analyze stack traces
+- Suggest improvements
+- Understand unfamiliar codebases
+
+### LeetCode & Interview Prep
+
+- Explain coding problems
+- Analyze constraints
+- Suggest algorithms
+- Debug runtime errors
+- Review solutions
+
+### Research & Learning
+
+- Summarize articles
+- Explain technical documentation
+- Generate study notes
+- Analyze PDFs and screenshots
+
+### Productivity
+
+- Draft emails
+- Generate meeting summaries
+- Create action items
+- Retrieve information quickly
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---------|------------|
+| Desktop App | Electron |
+| Frontend | HTML + TypeScript |
+| Backend | FastAPI |
+| Authentication | JWT |
+| OCR | Local OCR Pipeline |
+| Vision | Multimodal LLM |
+| Memory | PostgreSQL |
+| Storage | Supabase |
+| AI Models | Groq / OpenAI |
+
+---
+
+## Installation
+
+### Windows
+
+1. Download `Orion Setup.exe`
+2. Run the installer
+3. Launch Orion
+4. Press `Ctrl + Space`
+5. Verify your AgentOps account
+6. Start using Orion anywhere
+
+---
+
+## Roadmap
+
+### v1.0
+
+- Windows Desktop Application
+- Screenshot Understanding
+- OCR Extraction
+- Vision Fallback
+- AgentOps Authentication
+- Global Shortcut Launcher
+
+### v1.1
+
+- Production API Deployment
+- Improved Code Understanding
+- Better OCR Routing
+- Orion Analytics Dashboard
+- Desktop Update Notifications
+
+---
+
+## Why Orion?
+
+Most AI assistants live inside a browser tab.
+
+Orion brings AgentOps directly to the desktop, enabling context-aware assistance across any application while maintaining privacy-first processing and seamless integration with the AgentOps multi-agent platform.
+
+Think of Orion as:
+
+- ChatGPT Desktop × Screen Understanding
+- Claude Computer Use × Agent Memory
+- AI Copilot × Multi-Agent Workflows
+
+built on top of the AgentOps ecosystem.
 
 ## Who sees what
 
