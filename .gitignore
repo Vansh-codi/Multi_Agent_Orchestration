@@ -85,3 +85,49 @@ users.db
 backup.sql
 desktop/dist/
 desktop/release/
+debug_capture.png
+screenshots/
+captures/
+# Python
+.python-version
+.ipynb_checkpoints/
+
+# Secrets
+*.pem
+*.key
+*.crt
+credentials.json
+secrets/
+
+# Runtime / caches
+*.pid
+*.lock
+cache/
+checkpoints/
+state/
+session_data/
+
+# OCR / Vision
+captures/
+screenshots/
+ocr_cache/
+vision_cache/
+
+# RAG / Embeddings
+vector_store/
+faiss/
+faiss_index/
+embeddings_cache/
+
+# Test outputs
+test_outputs/
+playwright-report/
+
+# Local configs
+config.local.py
+settings.local.json
+
+# Artifacts
+artifacts/
+exports/
+reports/
