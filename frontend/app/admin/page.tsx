@@ -18,7 +18,7 @@ import OverviewPanel from "@/components/agentops/admin/panels/OverviewPanel";
 import RunsPanel from "@/components/agentops/admin/panels/RunsPanel";
 import SystemPanel from "@/components/agentops/admin/panels/SystemPanel";
 import UsersPanel from "@/components/agentops/admin/panels/UsersPanel";
-
+import OrionPanel from "@/components/agentops/admin/panels/OrionPanel";
 import { Tab } from "@/components/agentops/admin/adminTypes";
 
 export default function AdminDashboard() {
@@ -140,6 +140,7 @@ export default function AdminDashboard() {
             {tab === "users" && <UsersPanel />}
             {tab === "runs" && <RunsPanel />}
             {tab === "system" && <SystemPanel />}
+            {tab === "orion" && <OrionPanel />}
           </AnimatePresence>
         </main>
       </div>

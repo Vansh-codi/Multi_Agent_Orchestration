@@ -19,6 +19,9 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from routes.memory import router as memory_router
+from routes.orion import router as orion_router
+
 from fastapi import HTTPException
 from routes.auth import limiter
 from slowapi import _rate_limit_exceeded_handler
@@ -124,6 +127,8 @@ app.include_router(assistant_router)
 app.include_router(github_router)
 app.include_router(updates_router)
 app.include_router(preferences_router)
+app.include_router(orion_router)
+app.include_router(memory_router)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret)
@@ -907,6 +912,7 @@ async def _run_graph(
 
     try:
         final_tokens = 0
+        final_messages = []
         async for event in GRAPH.astream_events(
             initial_state,
             version="v1",
@@ -953,6 +959,7 @@ async def _run_graph(
                         )
                         for m in messages
                     ]
+                    final_messages.extend(messages)
 
                 await publish_event(
                     run_id,
@@ -989,6 +996,29 @@ async def _run_graph(
                 final_tokens,
                 db_run_id,
             )
+            summary = "\n".join(final_messages[:5])
+
+            if summary.strip() and len(summary) > 50:
+
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        INSERT INTO assistant_memory
+                        (
+                            user_id,
+                            topic,
+                            summary,
+                            category,
+                            source
+                        )
+                        VALUES ($1,$2,$3,$4,$5)
+                        """,
+                        user_id,
+                        goal[:100],
+                        summary[:500],
+                        "projects",
+                        "AgentOps",
+                    )
 
     except asyncio.CancelledError:          # ← added
         log.info("graph_cancelled", run_id=run_id)

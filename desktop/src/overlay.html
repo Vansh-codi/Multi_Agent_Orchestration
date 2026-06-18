@@ -13,7 +13,7 @@
   }
   #wrap {
     background: rgba(8,8,8,0.94);
-    border: 1px solid #1d9e75;
+    border: 1px solid #7c3aed;
     border-radius: 16px;
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
@@ -38,7 +38,7 @@
   #logo {
     font-size: 14px;
     font-weight: 900;
-    color: #1d9e75;
+    color: #f59e0b;
     font-family: monospace;
     letter-spacing: -1px;
     flex-shrink: 0;
@@ -116,6 +116,53 @@
     -webkit-app-region: no-drag;
   }
   #close:hover { color: #ef4444; }
+  #update-banner {
+  display:none;
+  margin-top:8px;
+  padding:10px;
+  border:1px solid #1d9e75;
+  border-radius:10px;
+  background:#0f2d24;
+}
+
+#update-banner.show {
+  display:block;
+}
+
+#update-title {
+  color:#5dcaa5;
+  font-size:12px;
+  font-weight:700;
+}
+
+#update-version {
+  margin-top:4px;
+  color:#9ca3af;
+  font-size:11px;
+}
+
+#update-actions {
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+#update-now,
+#update-later {
+  border:none;
+  border-radius:6px;
+  padding:4px 10px;
+  cursor:pointer;
+}
+
+#update-now {
+  background:#1d9e75;
+}
+
+#update-later {
+  background:#1f2937;
+  color:white;
+}
   #ss-preview {
     display: none;
     margin-top: 6px;
@@ -207,7 +254,7 @@
     margin-top: 5px;
     font-size: 9px;
     font-family: monospace;
-    color: #0f2d24;
+    color: #06b6d4;
   }
   #privacy span.hi { color: #1d4030; }
   ::-webkit-scrollbar { width: 3px; }
@@ -232,6 +279,25 @@
     <button id="logout" title="Logout">⇦</button>
     <button id="close" title="Close (Esc)">✕</button>
   </div>
+  <div id="update-banner">
+  <div id="update-title">
+    🚀 Orion Update Available
+  </div>
+
+  <div id="update-version">
+    Latest: <span id="update-version-text"></span>
+  </div>
+
+  <div id="update-actions">
+    <button id="update-now">
+      Update
+    </button>
+
+    <button id="update-later">
+      Later
+    </button>
+  </div>
+</div>
 
   <div id="ss-preview">
     <span>📷 screenshot ready</span>
@@ -265,6 +331,53 @@
   const ssClear   = document.getElementById("ss-clear")
   const autoSsEl  = document.getElementById("auto-ss")
   const privTxt   = document.getElementById("privacy-text")
+  const updateBanner = document.getElementById("update-banner")
+  const updateVersionText = document.getElementById("update-version-text")
+  const updateLater = document.getElementById("update-later")
+  const updateNow = document.getElementById("update-now")
+  const updateTitle = document.getElementById("update-title")
+
+  // ── Update state flag — only true after file is fully downloaded ──
+  let updateDownloaded = false
+
+  // Step 1: new version found, download starting automatically
+  window.electronAPI.onUpdateAvailable((update) => {
+    console.log("UPDATE AVAILABLE:", update)
+    updateDownloaded = false
+    updateVersionText.textContent = update.version
+    updateTitle.textContent = "🔄 Downloading Update..."
+    updateNow.textContent = "Downloading..."
+    updateNow.disabled = true          // not clickable until download done
+    updateBanner.classList.add("show")
+    window.electronAPI.expand(180)
+  })
+
+  // Step 2: download finished — NOW safe to install
+  window.electronAPI.onUpdateDownloaded((data) => {
+    console.log("UPDATE READY:", data.version)
+    updateDownloaded = true
+    updateTitle.textContent = "✅ Update Ready"
+    updateVersionText.textContent = data.version
+    updateNow.textContent = "Update & Restart"
+    updateNow.disabled = false         // enable button only now
+    updateBanner.classList.add("show")
+  })
+
+  window.electronAPI.onOrionUpdated((data) => {
+    alert(` Orion updated from ${data.from} to ${data.to}`)
+  })
+
+  updateLater.addEventListener("click", () => {
+    updateBanner.classList.remove("show")
+    window.electronAPI.collapse()
+  })
+
+  updateNow.addEventListener("click", () => {
+    if (!updateDownloaded) return      // guard: noop if download not done
+    updateNow.disabled = true
+    updateNow.textContent = "Installing..."
+    window.electronAPI.installUpdate()
+  })
 
   let screenshotB64 = null
   let loading = false
@@ -312,16 +425,6 @@
   async function captureScreen() {
     if (!loggedIn)
       return null
-      // ── Ensure logged in first ─────────────────────────────
-  // if (!loggedIn) {
-  //   try {
-  //     await window.electronAPI.login("gj@gmail.com", "Gaj123456789")
-  //     loggedIn = true
-  //   } catch (e) {
-  //     console.error("Login failed:", e)
-  //     return null
-  //   }
-  // }
     const token = await window.electronAPI.getToken()
 
     // Hide Orion so it's not in the screenshot
@@ -453,8 +556,6 @@
     }
 
     const question = text
-    // const question = input.value.trim()
-    // if (!question || loading) return
 
     loading = true
     askBtn.disabled = true
@@ -475,14 +576,6 @@
     setStatus(screenshotB64 ? "reading screen locally..." : "thinking...")
 
     try {
-      // ── Login once ──────────────────────────────────────────
-      // if (!loggedIn) {
-      //   const email    = "gj@gmail.com"
-      //   const password = "Gaj123456789"
-      //   await window.electronAPI.login(email, password)
-      //   loggedIn = true
-      // }
-
       const body = {
         question,
         screenshot:  screenshotB64 || undefined,

@@ -4,7 +4,7 @@ from fastapi import APIRouter,HTTPException
 from services.db import get_db
 from routes.dependencies import get_current_user
 from pydantic import BaseModel
-
+from datetime import datetime, timezone, timedelta
 class MaintenanceRequest(BaseModel):
     maintenance_mode: bool
     message: str = ""
@@ -20,7 +20,7 @@ class PlatformUpdateRequest(BaseModel):
     priority: str = "medium"
 
     version: str = ""
-
+    target: str = "platform"
     active: bool = True
     show_banner: bool = False
 class UpdateEditRequest(BaseModel):
@@ -31,7 +31,7 @@ class UpdateEditRequest(BaseModel):
     priority: str = "medium"
 
     version: str = ""
-
+    target: str = "platform"
     active: bool = True
     show_banner: bool = False
 def require_admin(user):
@@ -535,13 +535,14 @@ async def create_update(
                 type,
                 priority,
                 version,
+                target,
                 active,
                 show_banner,
                 details
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8
+                $1,$2,$3,$4,$5,$6,$7,$8,$9
             )
             """,
             payload.title,
@@ -549,6 +550,7 @@ async def create_update(
             payload.type,
             payload.priority,
             payload.version,
+            payload.target,
             payload.active,
             payload.show_banner,
             payload.details,
@@ -651,16 +653,18 @@ async def edit_update(
                 type = $3,
                 priority = $4,
                 version = $5,
-                active = $6,
-                show_banner = $7,
-                details=$8
-            WHERE id = $9
+                target = $6,
+                active = $7,
+                show_banner = $8,
+                details=$9
+            WHERE id = $10
             """,
             payload.title,
             payload.message,
             payload.type,
             payload.priority,
             payload.version,
+            payload.target,
             payload.active,
             payload.show_banner,
             payload.details,
@@ -669,4 +673,183 @@ async def edit_update(
 
     return {
         "success": True
+    }
+@router.get("/orion/activity")
+async def get_orion_activity(
+     user=Depends(get_current_user)
+):
+    require_admin(user)
+
+    db = await get_db()
+
+    async with db.acquire() as conn:
+
+        row = await conn.fetchrow("""
+            SELECT
+                COUNT(*) FILTER (
+                    WHERE event_type = 'assistant_query'
+                ) AS assistant_queries,
+
+                COUNT(*) FILTER (
+                    WHERE event_type = 'ocr_request'
+                ) AS ocr_requests,
+
+                COUNT(*) FILTER (
+                    WHERE event_type = 'screen_analyzed'
+                ) AS screens_analyzed,
+
+                COUNT(*) FILTER (
+                    WHERE event_type = 'vision_fallback'
+                ) AS vision_fallbacks
+
+            FROM orion_activity
+        """)
+
+    return {
+        "assistant_queries": row["assistant_queries"] or 0,
+        "ocr_requests": row["ocr_requests"] or 0,
+        "screens_analyzed": row["screens_analyzed"] or 0,
+        "vision_fallbacks": row["vision_fallbacks"] or 0,
+    }
+@router.get("/orion/stats")
+async def get_orion_stats(
+    user=Depends(get_current_user)
+):
+    require_admin(user)
+
+    db = await get_db()
+
+    async with db.acquire() as conn:
+
+        total = await conn.fetchval("""
+            SELECT COUNT(*)
+            FROM orion_devices
+        """)
+
+        active = await conn.fetchval("""
+            SELECT COUNT(*)
+            FROM orion_devices
+            WHERE last_seen >
+            NOW() - INTERVAL '10 minutes'
+        """)
+
+        verified = await conn.fetchval("""
+            SELECT COUNT(*)
+            FROM orion_devices
+            WHERE verified = TRUE
+        """)
+
+    return {
+        "total_installs": total,
+        "active_devices": active,
+        "verified_devices": verified,
+        "online_today": active
+    }
+
+@router.get("/orion/devices")
+async def get_orion_devices(
+    user=Depends(get_current_user)
+):
+    require_admin(user)
+
+    db = await get_db()
+
+    async with db.acquire() as conn:
+
+        rows = await conn.fetch("""
+            SELECT
+                u.email,
+                d.device_name,
+                d.os,
+                d.version,
+                d.last_seen,
+                d.verified
+            FROM orion_devices d
+            LEFT JOIN users u
+                ON u.id = d.user_id
+            ORDER BY d.last_seen DESC
+        """)
+
+    return [
+    {
+        "device_name": r["device_name"],
+        "user_email": r["email"],
+        "version": r["version"],
+        "os": r["os"],
+        "last_seen": r["last_seen"].isoformat()
+        if r["last_seen"] else None,
+
+        "status": (
+            "Online"
+            if r["last_seen"] and
+            r["last_seen"] >
+            datetime.now(timezone.utc) -
+            timedelta(minutes=10)
+            else "Offline"
+        ),
+
+        "verified": r["verified"],
+    }
+    for r in rows
+]
+@router.get("/orion/versions")
+async def get_orion_versions(
+    user=Depends(get_current_user)
+):
+    require_admin(user)
+
+    db = await get_db()
+
+    async with db.acquire() as conn:
+
+        rows = await conn.fetch("""
+            SELECT
+                version,
+                COUNT(*) AS users
+            FROM orion_devices
+            GROUP BY version
+            ORDER BY version DESC
+        """)
+
+    return [
+        {
+            "version": r["version"],
+            "users": r["users"],
+        }
+        for r in rows
+    ]
+@router.get("/orion/latest-version")
+async def get_latest_version(
+     _: dict = Depends(get_current_user)
+):
+    db = await get_db()
+
+    async with db.acquire() as conn:
+
+        row = await conn.fetchrow("""
+    SELECT
+        version,
+        title,
+        message,
+        details
+    FROM platform_updates
+    WHERE active = TRUE
+    AND target = 'orion'
+    ORDER BY created_at DESC
+    LIMIT 1
+""")
+
+    if not row:
+        return {
+            "version": None,
+            "title": None,
+            "message": None,
+            "details": None,
+        }
+
+    return {
+        "version": row["version"],
+        "title": row["title"],
+        "message": row["message"],
+        "details": row["details"],
     }

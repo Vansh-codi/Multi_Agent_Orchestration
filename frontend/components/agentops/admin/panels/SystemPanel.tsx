@@ -18,7 +18,7 @@ export default function SystemPanel() {
   const [priority, setPriority] = useState("medium");
 
   const [version, setVersion] = useState("");
-
+  const [target, setTarget] = useState("platform");
   const [active, setActive] = useState(true);
   const [details, setDetails] = useState("");
   const [showBanner, setShowBanner] = useState(true);
@@ -84,6 +84,7 @@ export default function SystemPanel() {
           type,
           priority,
           version,
+          target,
           active,
           show_banner: showBanner,
         }),
@@ -181,13 +182,6 @@ export default function SystemPanel() {
     },
   ];
   const safeUpdates = Array.isArray(updates) ? updates : [];
-
-  // useEffect(() => {
-  //   apiFetch("/admin/system")
-  //     .then((r) => r.json())
-  //     .then(setSystem);
-  // }, []);
-
   return (
     <motion.div
       key="system"
@@ -273,7 +267,7 @@ List changes, fixes, maintenance notes...
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">Type</label>
 
@@ -348,6 +342,35 @@ List changes, fixes, maintenance notes...
             "
                 />
               </div>
+              <div>
+              <label className="text-xs text-neutral-500">
+                Target
+              </label>
+
+              <select
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                className="
+                  mt-1
+                  w-full
+                  rounded-xl
+                  border
+                  border-white/[0.08]
+                  bg-zinc-900
+                  px-3
+                  py-2
+                  text-sm
+                "
+              >
+                <option value="platform">
+                  AgentOps Platform
+                </option>
+
+                <option value="orion">
+                  Orion Desktop
+                </option>
+              </select>
+            </div>
             </div>
 
             <div className="flex gap-6">
@@ -596,83 +619,6 @@ List changes, fixes, maintenance notes...
         delay={0.26}
       />
 
-      {/* Settings */}
-      {/* <motion.div
-        custom={0.32}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-      >
-        <Card className="p-4">
-          <SectionLabel>Settings</SectionLabel>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              {
-                icon: "👥",
-                accent: "green",
-                label: "User Limits",
-                desc: "Per-plan run & token quotas. Set hard caps and overage behaviour.",
-              },
-              {
-                icon: "🛡",
-                accent: "blue",
-                label: "Security",
-                desc: "API key rotation, SSO configuration, IP allowlists.",
-              },
-              {
-                icon: "🔧",
-                accent: "amber",
-                label: "Maintenance",
-                desc: "Schedule downtime windows, run migrations, flush caches.",
-              },
-              {
-                icon: "📋",
-                accent: "green",
-                label: "Audit Logs",
-                desc: "Full admin action history with actor, timestamp, and diff.",
-              },
-              {
-                icon: "📣",
-                accent: "blue",
-                label: "Notifications",
-                desc: "Alert routing: email, Slack, PagerDuty, webhook.",
-              },
-              {
-                icon: "⚙",
-                accent: "gray",
-                label: "Feature Flags",
-                desc: "Enable / disable features per plan or individual users.",
-              }, */}
-      {/* ].map((s, i) => (
-              <button
-                key={i}
-                className="group flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all hover:border-white/[0.1] hover:bg-white/[0.04]"
-              >
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-base
-                  ${
-                    s.accent === "green"
-                      ? "border border-green-500/20 bg-green-500/10"
-                      : s.accent === "blue"
-                        ? "border border-blue-500/20 bg-blue-500/10"
-                        : s.accent === "amber"
-                          ? "border border-amber-500/20 bg-amber-500/10"
-                          : "border border-white/[0.08] bg-white/[0.04]"
-                  }`}
-                >
-                  {s.icon}
-                </div>
-                <p className="text-[13px] font-semibold text-neutral-300 group-hover:text-white transition-colors">
-                  {s.label}
-                </p>
-                <p className="text-[11px] leading-relaxed text-neutral-600">
-                  {s.desc}
-                </p>
-              </button>
-            ))}
-          </div>
-        </Card>
-      </motion.div>*/}
     </motion.div>
   );
 }

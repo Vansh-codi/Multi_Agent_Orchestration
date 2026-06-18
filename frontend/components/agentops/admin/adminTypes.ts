@@ -1,4 +1,4 @@
-export type Tab = "overview" | "users" | "runs" | "system";
+export type Tab = "overview" | "users" | "runs" | "system" | "orion";
 
 export type PlanType = "Pro" | "Team" | "Free";
 

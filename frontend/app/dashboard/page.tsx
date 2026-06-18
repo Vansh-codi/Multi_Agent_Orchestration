@@ -5,9 +5,9 @@ import Hero from "@/components/agentops/Hero";
 import MaintenancePage from "@/components/agentops/MaintenancePage";
 import SettingsPage from "@/components/agentops/SettingsPage";
 import Sidebar from "@/components/agentops/Sidebar";
-// import OrionPage from "@/components/orion/OrionPage";
 import ToolsPage from "@/components/agentops/toolspage";
 import { useAuthStore } from "@/store/authStore";
+import MemoryPage from "@/components/agentops/MemoryPage";
 import { useEffect, useState } from "react";
 export default function DashboardPage() {
   const [activePage, setActivePage] = useState("Dashboard");
@@ -62,8 +62,8 @@ export default function DashboardPage() {
         {activePage === "Tools" && <ToolsPage />}
 
         {activePage === "Memory" && (
-          <div className="p-6 text-zinc-500 text-sm">Memory — coming soon</div>
-        )}
+  <div className="p-6">
+    <MemoryPage /></div>)}
         {activePage === "Maintenance" && <MaintenancePage />}
       </main>
     </div>

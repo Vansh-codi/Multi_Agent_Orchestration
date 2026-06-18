@@ -20,6 +20,7 @@ import OverviewPanel from "./panels/OverviewPanel";
 import RunsPanel from "./panels/RunsPanel";
 import SystemPanel from "./panels/SystemPanel";
 import UsersPanel from "./panels/UsersPanel";
+import OrionPanel from "./panels/OrionPanel";
 
 import { ADMIN_TABS } from "./adminData";
 export default function AdminDashboard() {
@@ -149,12 +150,13 @@ export default function AdminDashboard() {
             ))}
           </motion.div>
 
-          <AnimatePresence mode="wait">
+          <>
             {tab === "overview" && <OverviewPanel />}
             {tab === "users" && <UsersPanel />}
             {tab === "runs" && <RunsPanel />}
             {tab === "system" && <SystemPanel />}
-          </AnimatePresence>
+            {tab === "orion" && <OrionPanel />}
+          </>
         </main>
       </div>
     </div>

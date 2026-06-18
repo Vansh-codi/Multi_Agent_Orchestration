@@ -8,6 +8,7 @@ import json
 from prompts.orion_identity import ORION_IDENTITY
 from routes.dependencies import get_current_user
 from services.db import get_db
+from services.orion_activity import log_orion_activity
 from tools.vision_extractor import extract_screen_context
 from graph.llm import call_llm_with_fallback   # ← waterfall, Orion only
 from tools.ocr_extractor import extract_text_from_image
@@ -39,10 +40,18 @@ async def ask_stream(
     async def generate():
 
         pool = await get_db()
+        await log_orion_activity(
+            user["user_id"],
+            "assistant_query"
+        )
 
         # ── 1. Screen context (screenshot → local Ollama only) ────────────────
         screen_context = ""
         if body.screenshot:
+            await log_orion_activity(
+                user["user_id"],
+                "ocr_request"
+            )
             if len(body.screenshot)  > 10_000_000:
                 yield _sse({
                     "token": "Screenshot too large."
@@ -55,7 +64,11 @@ async def ask_stream(
             ocr_text = await extract_text_from_image(
                 body.screenshot
             )
-           
+            await log_orion_activity(
+                user["user_id"],
+                "screen_analyzed"
+            )
+                    
 
             print("\n========== OCR OUTPUT ==========")
             print(ocr_text[:3000])
@@ -64,6 +77,10 @@ async def ask_stream(
             if len(ocr_text.strip()) > 100:
                 screen_context = ocr_text
             else:
+                await log_orion_activity(
+                    user["user_id"],
+                    "vision_fallback"
+                )
                 print("OCR weak → falling back to vision")
 
                 screen_context = await extract_screen_context(
@@ -173,14 +190,51 @@ async def ask_stream(
         # ── 5. Memory save ────────────────────────────────────────────────────
         if full_response and "All providers exhausted" not in full_response:
             async with pool.acquire() as conn:
+                category = "general"
+
+                q_lower = body.question.lower()
+
+                if any(word in q_lower for word in [
+                    "project",
+                    "build",
+                    "agentops",
+                    "orion",
+                    "deploy"
+                ]):
+                    category = "projects"
+
+                elif any(word in q_lower for word in [
+                    "prefer",
+                    "favorite",
+                    "like",
+                    "stack"
+                ]):
+                    category = "preferences"
+
+                elif any(word in q_lower for word in [
+                    "my name",
+                    "who am i",
+                    "about me"
+                ]):
+                    category = "about_me"
+
                 await conn.execute(
                     """
-                    INSERT INTO assistant_memory (user_id, topic, summary)
-                    VALUES ($1, $2, $3)
+                    INSERT INTO assistant_memory
+                    (
+                        user_id,
+                        topic,
+                        summary,
+                        category,
+                        source
+                    )
+                    VALUES ($1,$2,$3,$4,$5)
                     """,
                     user["user_id"],
                     (body.question or "screen query")[:100],
                     full_response[:500],
+                    category,
+                    "Orion",
                 )
 
         yield _sse({"done": True, "provider": provider_used})
