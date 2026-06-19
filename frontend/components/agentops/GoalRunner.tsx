@@ -80,7 +80,11 @@ export default function GoalRunner({
 
       setRunId(run_id);
 
-      const ws = new WebSocket(`ws://localhost:8000/ws/${run_id}`);
+      // const ws = new WebSocket(`ws://localhost:8000/ws/${run_id}`);
+      const WS_URL =
+        process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000";
+
+      const ws = new WebSocket(`${WS_URL}/ws/${run_id}`);
       wsRef.current = ws;
       ws.onmessage = (e) => {
         const event = JSON.parse(e.data);

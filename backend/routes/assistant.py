@@ -79,14 +79,24 @@ async def ask_stream(
             else:
                 await log_orion_activity(
                     user["user_id"],
-                    "vision_fallback"
+                    "ocr_low_confidence"
                 )
-                print("OCR weak → falling back to vision")
 
-                screen_context = await extract_screen_context(
-                    screenshot_b64=body.screenshot,
-                    user_question=body.question,
+                screen_context = (
+                    "OCR could not reliably read the screenshot. "
+                    "Please provide a clearer screenshot or paste the text."
                 )
+            # else:
+            #     await log_orion_activity(
+            #         user["user_id"],
+            #         "vision_fallback"
+            #     )
+            #     print("OCR weak → falling back to vision") production change here this para
+
+            #     screen_context = await extract_screen_context(
+            #         screenshot_b64=body.screenshot,
+            #         user_question=body.question,
+            #     )
 
         # if body.screenshot:
         #     yield _sse({"status": "reading screen locally..."})

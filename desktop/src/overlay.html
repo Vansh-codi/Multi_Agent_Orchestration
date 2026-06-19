@@ -581,9 +581,10 @@
         screenshot:  screenshotB64 || undefined,
         pasted_text: screenshotB64 ? undefined : undefined,
       }
-
+      const API_URL = window.electronAPI.getApiUrl?.() || "http://localhost:8000";
       const token = await window.electronAPI.getToken()
-      const res = await fetch("http://localhost:8000/assistant/ask/stream", {
+      // const res = await fetch("http://localhost:8000/assistant/ask/stream", {
+      const res = await fetch(`${API_URL}/assistant/ask/stream`, {
         method:  "POST",
         headers: {
           "Content-Type":  "application/json",

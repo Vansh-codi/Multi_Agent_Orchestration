@@ -15,7 +15,9 @@ type LoginResponse = {
     role: string;
   };
 };
-
+const API_URL =
+  process.env.API_URL ||
+  "http://localhost:8000";
 let heartbeatInterval: NodeJS.Timeout | null = null;
 let win: BrowserWindow | null = null;
 let authToken: string | null = null;
@@ -51,6 +53,7 @@ function createWindow() {
       nodeIntegration: false,
       webSecurity: true,
       allowRunningInsecureContent: false,
+      sandbox: true,
     },
   });
 
@@ -59,7 +62,8 @@ function createWindow() {
   });
 
   ipcMain.handle("login", async (_e, email: string, password: string) => {
-    const res = await fetch("http://localhost:8000/auth/login", {
+    // const res = await fetch("http://localhost:8000/auth/login", {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -72,7 +76,8 @@ function createWindow() {
 
     // ── Device registration ───────────────────────────────────
     try {
-      const registerRes = await fetch("http://localhost:8000/orion/register", {
+      // const registerRes = await fetch("http://localhost:8000/orion/register", {
+      const registerRes = await fetch(`${API_URL}/orion/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +130,8 @@ function createWindow() {
             "default-src 'self'",
             "script-src 'unsafe-inline'",
             "style-src 'unsafe-inline'",
-            "connect-src http://localhost:8000",
+            // "connect-src http://localhost:8000",
+            `connect-src ${API_URL}`,
             "img-src 'none'",
             "object-src 'none'",
             "frame-src 'none'",
@@ -210,7 +216,8 @@ function toggleWindow() {
 async function sendHeartbeat() {
   if (!authToken) return;
   try {
-    const res = await fetch("http://localhost:8000/orion/heartbeat", {
+    // const res = await fetch("http://localhost:8000/orion/heartbeat", {
+    const res = await fetch(`${API_URL}/orion/heartbeat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

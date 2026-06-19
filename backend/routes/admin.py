@@ -520,7 +520,7 @@ async def create_update(
 ):
     require_admin(user)
     print("PAYLOAD:")
-    print(payload.model_dump())
+    # print(payload.model_dump())
 
     pool = await get_db()
 

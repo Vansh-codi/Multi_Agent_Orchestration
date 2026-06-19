@@ -227,7 +227,7 @@ async def signup(
             value=token,
             httponly=True,
             secure=settings.cookie_secure, # True in production
-            samesite="lax",
+            samesite="none" if settings.cookie_secure else "lax",
             max_age=60 * 60,
         )
 
@@ -295,7 +295,8 @@ async def login(
             value=token,
             httponly=True,
             secure= settings.cookie_secure, # True in production
-            samesite="lax",
+            # samesite="lax",
+            samesite="none" if settings.cookie_secure else "lax",
             max_age=60 * 60,
         )
 
@@ -335,7 +336,8 @@ async def google_callback(request: Request):
         value=access_token,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="lax",
+        # samesite="lax",
+        samesite="none" if settings.cookie_secure else "lax",
         max_age=60 * 60 * 24,
     )
     return response
@@ -394,7 +396,7 @@ async def logout(
     response.delete_cookie(
         key="agentops_token",
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.cookie_secure else "lax",
     )
 
     return {
@@ -524,7 +526,8 @@ async def delete_account(
     response.delete_cookie(
         key="agentops_token",
         httponly=True,
-        samesite="lax",
+        # samesite="lax",
+        samesite="none" if settings.cookie_secure else "lax",
     )
 
     return {

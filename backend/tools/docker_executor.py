@@ -1,35 +1,81 @@
-import subprocess
+# import subprocess
 
+
+# async def execute_in_docker(
+#     filepath: str,
+#     language: str,
+# ) -> str:
+
+#     result = subprocess.run(
+#         [
+#             "docker",
+#             "run",
+#             "--rm",
+
+#             "--memory=128m",
+#             "--cpus=1",
+
+#             "--network=none",
+
+#             "-v",
+#             f"{filepath}:/tmp/code:ro",
+
+#             "-e",
+#             f"LANGUAGE={language}",
+
+#             "agent-executor",
+#         ],
+#         capture_output=True,
+#         text=True,
+#         timeout=20,
+#         encoding="utf-8",
+#         errors="replace",
+#     )
+
+#     return result.stdout or result.stderr
+import subprocess
+import os
+
+EXECUTION_MODE = os.getenv(
+    "EXECUTION_MODE",
+    "docker"
+)
+
+RUNNER_URL = os.getenv(
+    "RUNNER_URL",
+    ""
+)
 
 async def execute_in_docker(
     filepath: str,
     language: str,
 ) -> str:
 
-    result = subprocess.run(
-        [
-            "docker",
-            "run",
-            "--rm",
+    if EXECUTION_MODE == "docker":
 
-            "--memory=128m",
-            "--cpus=1",
+        result = subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--memory=128m",
+                "--cpus=1",
+                "--network=none",
+                "-v",
+                f"{filepath}:/tmp/code:ro",
+                "-e",
+                f"LANGUAGE={language}",
+                "agent-executor",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            encoding="utf-8",
+            errors="replace",
+        )
 
-            "--network=none",
+        return result.stdout or result.stderr
 
-            "-v",
-            f"{filepath}:/tmp/code:ro",
-
-            "-e",
-            f"LANGUAGE={language}",
-
-            "agent-executor",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=20,
-        encoding="utf-8",
-        errors="replace",
+    raise RuntimeError(
+        "Remote runner not configured"
     )
-
-    return result.stdout or result.stderr
