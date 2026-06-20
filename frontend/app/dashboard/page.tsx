@@ -9,20 +9,32 @@ import ToolsPage from "@/components/agentops/toolspage";
 import { useAuthStore } from "@/store/authStore";
 import MemoryPage from "@/components/agentops/MemoryPage";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+// import { useEffect, useState } from "react";
 export default function DashboardPage() {
+  const router = useRouter();
   const [activePage, setActivePage] = useState("Dashboard");
   const { user } = useAuthStore();
 
   useEffect(() => {
     async function syncAuth() {
-      if (useAuthStore.getState().isAuthenticated) return;
+        if (useAuthStore.getState().isAuthenticated) return;
 
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-          credentials: "include",
-        });
-        if (res.ok) {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+            {
+              credentials: "include",
+            }
+          );
+
+          if (!res.ok) {
+            router.replace("/login");
+            return;
+          }
+
           const data = await res.json();
+
           useAuthStore.getState().setAuth(
             {
               id: data.user_id ?? data.id,
@@ -30,11 +42,33 @@ export default function DashboardPage() {
               email: data.email,
               role: data.role,
             },
-            "session",
+            "session"
           );
+        } catch {
+          router.replace("/login");
         }
-      } catch {}
-    }
+      }
+    // async function syncAuth() {
+    //   if (useAuthStore.getState().isAuthenticated) return;
+
+    //   try {
+    //     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+    //       credentials: "include",
+    //     });
+    //     if (res.ok) {
+    //       const data = await res.json();
+    //       useAuthStore.getState().setAuth(
+    //         {
+    //           id: data.user_id ?? data.id,
+    //           name: data.name ?? "",
+    //           email: data.email,
+    //           role: data.role,
+    //         },
+    //         "session",
+    //       );
+    //     }
+    //   } catch {}
+    // }
     syncAuth();
   }, []);
 
