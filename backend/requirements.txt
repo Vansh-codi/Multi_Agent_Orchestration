@@ -127,7 +127,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.29
 PyYAML==6.0.3
-rapidocr-onnxruntime==1.4.4
+rapidocr-onnxruntime==1.2.3
 realtime==2.30.0
 redis==5.0.7
 regex==2026.5.9
