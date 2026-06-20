@@ -1,6 +1,6 @@
 {
   "name": "orion-desktop",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Orion — AgentOps floating AI assistant",
   "main": "dist/main.js",
   "scripts": {
@@ -37,9 +37,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns",
-      "publisherName": "AgentOps",
-      "artifactName": "Orion-Setup-${version}.exe"
+      "icon": "assets/icon.icns"
     },
     "publish": {
       "provider": "github",

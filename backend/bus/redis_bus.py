@@ -6,9 +6,14 @@ from config import get_settings
 
 settings = get_settings()
 
+# def _client() -> aioredis.Redis:
+#     return aioredis.from_url(
+#         settings.redis_url,     # reads from .env via Settings
+#         decode_responses=True,
+#     )
 def _client() -> aioredis.Redis:
     return aioredis.from_url(
-        settings.redis_url,     # reads from .env via Settings
+        settings.redis_url.replace("redis://", "rediss://"),
         decode_responses=True,
     )
 
