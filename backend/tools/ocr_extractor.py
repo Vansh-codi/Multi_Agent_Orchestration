@@ -37,7 +37,7 @@
 import base64
 import io
 import re
-
+import numpy as np
 from PIL import Image
 from rapidocr_onnxruntime import RapidOCR
 
@@ -100,12 +100,28 @@ async def extract_text_from_image(
     image_bytes = base64.b64decode(
         screenshot_b64
     )
+    print("OCR START")
 
     image = Image.open(
         io.BytesIO(image_bytes)
     )
 
-    result, _ = ocr(image)
+    print("IMAGE MODE:", image.mode)
+    print("IMAGE SIZE:", image.size)
+
+    image_np = np.array(image)
+
+    print("NUMPY SHAPE:", image_np.shape)
+
+    result, _ = ocr(image_np)
+
+    print("OCR RAW RESULT:", bool(result))
+
+    # image = Image.open(
+    #     io.BytesIO(image_bytes)
+    # )
+
+    # result, _ = ocr(image)
 
     if not result:
         return ""
