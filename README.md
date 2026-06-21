@@ -12,7 +12,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 # AgentOps — Multi-Agent Task Runner
 
-**LangGraph · FastAPI · Next.js 14 · PostgreSQL · Redis · Supabase · Groq**
+**LangGraph · FastAPI · Next.js 14 · PostgreSQL · Redis · Supabase · Local LLM & Groq**
 
 You give it a goal in plain English. A Supervisor agent decomposes it into a task DAG, routes subtasks to specialist agents, and streams live progress back to your browser over WebSocket. Admins get a full control panel; regular users get a clean agent workspace with RAG, GitHub automation, and real-time execution logs.
 
