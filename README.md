@@ -57,7 +57,7 @@ inside a scalable full-stack architecture.
 
 Orion is AgentOps' native desktop AI assistant built with Electron.
 
-It provides instant access to AgentOps anywhere on your computer using a global shortcut, allowing users to capture screen context, understand content, and interact with AI without opening a browser.
+It provides instant access to AgentOps anywhere on your computer using a global shortcut, allowing users to capture screen context and paste text, understand content, and interact with AI without opening a browser.
 
 ---
 
