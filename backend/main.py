@@ -1113,7 +1113,7 @@ async def websocket_endpoint(ws: WebSocket, run_id: str):
             print("\n========== WS EVENT ==========")
             print(event)
             print("==============================")
-
+            print("WS SEND:", event)
             await ws.send_json(event)
             if event.get("type") == "done":
                 break

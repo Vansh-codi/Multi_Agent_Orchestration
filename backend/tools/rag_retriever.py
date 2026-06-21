@@ -394,9 +394,15 @@ def add_documents(
     try:
         _collection.delete(
             where={
-                "user_id": user_id,
-                "filename": filename,
-            }
+            "$and": [
+                {"user_id": user_id},
+                {"filename": filename},
+            ]
+        }
+                    # where={
+            #     "user_id": user_id,
+            #     "filename": filename,
+            # }
         )
     except Exception:
         pass
@@ -430,10 +436,13 @@ def add_documents(
             metadatas=metadatas,
         )
         peek = _collection.get(
-            where={
-                "user_id": user_id,
-                "filename": filename,
+             where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"filename": filename},
+                ]
             }
+
         )
 
         print("========== CHROMA INSERT ==========")
