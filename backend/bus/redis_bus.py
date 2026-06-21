@@ -18,6 +18,7 @@ def _client() -> aioredis.Redis:
     )
 
 async def publish_event(run_id: str, event: dict) -> None:
+    print("PUBLISH:", run_id, event)
     async with _client() as r:
         await r.publish(f"run:{run_id}", json.dumps(event))
 
@@ -25,6 +26,7 @@ async def subscribe_events(run_id: str) -> AsyncGenerator[dict, None]:
     async with _client() as r:
         pubsub = r.pubsub()
         await pubsub.subscribe(f"run:{run_id}")
+        print("SUBSCRIBED:", run_id)
         async for message in pubsub.listen():
             if message["type"] == "message":
                 yield json.loads(message["data"])

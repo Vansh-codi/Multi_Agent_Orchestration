@@ -856,11 +856,18 @@ async def run_agent(
                     },
                 )
 
-        
+        async def delayed_rag():
+            print("WAITING 3 SECONDS FOR WS...")
+            await asyncio.sleep(3)
+            await run_simple_rag()
 
         asyncio.create_task(
-            run_simple_rag()
+            delayed_rag()
         )
+
+        # asyncio.create_task(
+        #     run_simple_rag()
+        # )
 
 # ---------------------------------------------------
     # FULL AGENT GRAPH
