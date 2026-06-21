@@ -145,12 +145,22 @@ export default function OrionPanel() {
       console.log("ORION SEND");
       console.log("QUESTION:", question);
 
-      const res = await fetch("/api/assistant/ask/stream", {
+      console.log(
+    "API URL:",
+    process.env.NEXT_PUBLIC_API_URL
+    );
+
+    const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/assistant/ask/stream`,
+    {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+        "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
-      });
+    }
+    );
       console.log("STATUS:", res.status);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
