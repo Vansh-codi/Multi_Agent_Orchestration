@@ -776,6 +776,17 @@ async def run_agent(
                     context_files=context_files,
                     user_id=str(user["id"]),
                 )
+                print("\n========== RAG RESULT ==========")
+                print(result)
+                print("================================")
+
+                print("ANSWER:")
+                print(result.get("answer"))
+
+                print("CHUNKS:")
+                print(len(result.get("chunks", [])))
+
+                print("PUBLISHING TO:", run_id)
 
                 await publish_event(
                     run_id,
@@ -1084,6 +1095,8 @@ async def websocket_endpoint(ws: WebSocket, run_id: str):
     try:
 
         async for event in subscribe_events(run_id):
+            print("\nWS EVENT RECEIVED:")
+            print(event)
 
             # Skip blank system events
             if (
@@ -1120,8 +1133,14 @@ async def websocket_endpoint(ws: WebSocket, run_id: str):
             run_id=run_id,
             error=str(e),
         )
-
     finally:
+        if ws.client_state.name != "DISCONNECTED":
+            try:
+                await ws.close()
+            except RuntimeError:
+                pass
 
-        await ws.close()
+    # finally:
+
+    #     await ws.close()
 
