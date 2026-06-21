@@ -91,6 +91,19 @@ def rag_tool(
             "rag_where",
             where=query_args["where"],
         )
+        peek = _collection.get(
+            where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"filename": {"$in": context_files}},
+                ]
+            }
+        )
+
+        print("========== CHROMA QUERY ==========")
+        print("FILES:", context_files)
+        print("USER:", user_id)
+        print("MATCHING DOCS:", len(peek.get("ids", [])))
 
         results = _collection.query(**query_args)
 
@@ -399,6 +412,17 @@ def add_documents(
             ids=ids,
             metadatas=metadatas,
         )
+        peek = _collection.get(
+            where={
+                "user_id": user_id,
+                "filename": filename,
+            }
+        )
+
+        print("========== CHROMA INSERT ==========")
+        print("FILE:", filename)
+        print("USER:", user_id)
+        print("INSERTED DOCS:", len(peek.get("ids", [])))
 
         log.info(
             "docs_added",
