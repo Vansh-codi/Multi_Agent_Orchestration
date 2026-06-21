@@ -142,6 +142,8 @@ export default function OrionPage() {
       } else if (question) {
         body.pasted_text = question;
       }
+      console.log("ORION SEND");
+      console.log("QUESTION:", question);
 
       const res = await fetch("/api/assistant/ask/stream", {
         method: "POST",
@@ -149,6 +151,7 @@ export default function OrionPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      console.log("STATUS:", res.status);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

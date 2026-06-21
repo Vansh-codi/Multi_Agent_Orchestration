@@ -329,6 +329,11 @@ async def google_callback(request: Request):
     name = userinfo.get("name", "")
 
     user, access_token = await get_or_create_oauth_user(email, name)
+    print("========== GOOGLE CALLBACK ==========")
+    print("EMAIL:", email)
+    print("USER ID:", user["id"])
+    print("TOKEN CREATED:", bool(access_token))
+    print("FRONTEND URL:", settings.frontend_url)
 
     response = RedirectResponse(url=f"{settings.frontend_url}/dashboard")
     response.set_cookie(
@@ -340,6 +345,7 @@ async def google_callback(request: Request):
         samesite="none" if settings.cookie_secure else "lax",
         max_age=60 * 60 * 24,
     )
+    print("COOKIE SET")
     return response
 # @router.get("/me")
 # async def me(token: str):
@@ -355,6 +361,8 @@ async def google_callback(request: Request):
 async def me(
     user=Depends(get_current_user)
 ):
+    print("========== /ME ==========")
+    print("USER:", user)
     return user
 from fastapi import Cookie
 

@@ -37,7 +37,11 @@ async def ask_stream(
     body: AskRequest,
     user=Depends(get_current_user),
 ):
+    print("========== ASSISTANT ==========")
+    print("USER:", user)
+    print("QUESTION:", body.question)
     async def generate():
+        print("START GENERATE")
 
         pool = await get_db()
         await log_orion_activity(
@@ -86,24 +90,7 @@ async def ask_stream(
                     "OCR could not reliably read the screenshot. "
                     "Please provide a clearer screenshot or paste the text."
                 )
-            # else:
-            #     await log_orion_activity(
-            #         user["user_id"],
-            #         "vision_fallback"
-            #     )
-            #     print("OCR weak → falling back to vision") production change here this para
-
-            #     screen_context = await extract_screen_context(
-            #         screenshot_b64=body.screenshot,
-            #         user_question=body.question,
-            #     )
-
-        # if body.screenshot:
-        #     yield _sse({"status": "reading screen locally..."})
-        #     screen_context = await extract_screen_context(
-        #         screenshot_b64=body.screenshot,
-        #         user_question=body.question,
-        #     )
+    
         elif body.pasted_text:
             screen_context = body.pasted_text
 
@@ -119,6 +106,7 @@ async def ask_stream(
                 """,
                 user["user_id"],
             )
+            print("MEMORIES FOUND:", len(rows))
 
         memory_text = (
             "\n".join(f"- {r['topic']}: {r['summary']}" for r in rows)
@@ -184,12 +172,14 @@ async def ask_stream(
 
         full_response = ""
         provider_used = "unknown"
-
+        print("CALLING LLM")
         try:
             full_response, provider_used = await call_llm_with_fallback(
                 messages=messages,
                 system=system,
             )
+            print("PROVIDER:", provider_used)
+            print("RESPONSE LENGTH:", len(full_response))
             yield _sse({"token": full_response, "provider": provider_used})
 
         except RuntimeError as e:
@@ -227,6 +217,8 @@ async def ask_stream(
                     "about me"
                 ]):
                     category = "about_me"
+                print("SAVING MEMORY")
+                print("CATEGORY:", category)
 
                 await conn.execute(
                     """
@@ -258,7 +250,5 @@ async def ask_stream(
             "Connection": "keep-alive",
         },
     )
-
-
 def _sse(data: dict) -> str:
     return f"data: {json.dumps(data)}\n\n"

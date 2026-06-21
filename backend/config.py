@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str
-
+   
     # Optional postgres docker vars
     postgres_user:     str | None = None
     postgres_password: str | None = None
@@ -88,6 +88,16 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()
+
+    print("========== SETTINGS ==========")
+    print("ENVIRONMENT:", settings.environment)
+    print("FRONTEND_URL:", settings.frontend_url)
+    print("BACKEND_URL:", settings.backend_url)
+    print("COOKIE_SECURE:", settings.cookie_secure)
+    print("ALLOWED_ORIGINS:", settings.allowed_origins)
+    print("JWT_SECRET_LENGTH:", len(settings.jwt_secret))
+    print("REDIS_URL_EXISTS:", bool(settings.redis_url))
+    print("==============================")
     if len(settings.jwt_secret) < 32:
         raise ValueError("JWT_SECRET must be at least 32 characters")
     return settings

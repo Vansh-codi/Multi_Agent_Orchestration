@@ -15,13 +15,18 @@ async def get_current_user(
     agentops_token: str | None = Cookie(default=None),
     authorization: str | None = Header(default=None),
 ):
+    print("========== AUTH DEBUG ==========")
+    print("COOKIE:", bool(agentops_token))
+    print("AUTH:", authorization)
     token = agentops_token
 
     if not token and authorization:
         if authorization.startswith("Bearer "):
             token = authorization[7:]
+    print("TOKEN FOUND:", bool(token))
 
     if not token:
+        print("401: NO TOKEN")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
@@ -35,10 +40,15 @@ async def get_current_user(
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
+        print("JWT DECODE OK")
+        print("SUB:", payload.get("sub"))
+        print("JTI:", payload.get("jti"))
+
 
         jti = payload.get("jti")
 
         if not jti:
+            print("401: NO JTI")
             raise HTTPException(
                 status_code=401,
                 detail="Invalid session"
@@ -59,8 +69,11 @@ async def get_current_user(
                 """,
                 jti,
             )
+            print("SESSION FOUND:", bool(session))
+          
 
             if not session:
+                print("401: SESSION EXPIRED")
                 raise HTTPException(
                     status_code=401,
                     detail="Session expired"
@@ -79,12 +92,16 @@ async def get_current_user(
                 """,
                 payload["sub"],
             )
+            print("USER FOUND:", bool(user))
 
             if not user:
+                print("401: USER NOT FOUND")
                 raise HTTPException(
                     status_code=401,
                     detail="User not found"
                 )
+            print("AUTH SUCCESS")
+
 
             return {
                 "user_id": str(user["id"]),
@@ -95,16 +112,17 @@ async def get_current_user(
             }
 
     except jwt.ExpiredSignatureError:
+        print("401: TOKEN EXPIRED")
         raise HTTPException(
             status_code=401,
             detail="Token expired"
         )
 
     except jwt.InvalidTokenError:
+        print("401: INVALID TOKEN")
+        print("ERROR:", str(e))
         raise HTTPException(
             status_code=401,
             detail="Invalid token"
         )
-    print("COOKIE:", agentops_token)
-    print("AUTH:", authorization)
-    print("TOKEN:", token)
+  
