@@ -8,6 +8,7 @@ import Sidebar from "@/components/agentops/Sidebar";
 import ToolsPage from "@/components/agentops/toolspage";
 import { useAuthStore } from "@/store/authStore";
 import MemoryPage from "@/components/agentops/MemoryPage";
+import OrionPanel from "@/components/orion/OrionPanel";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 // import { useEffect, useState } from "react";
@@ -90,9 +91,7 @@ export default function DashboardPage() {
         {activePage === "History" && (
           <div className="p-6 text-zinc-500 text-sm">History — coming soon</div>
         )}
-        {activePage === "Orion" && (
-          <iframe src="/orion" className="w-full h-screen border-0" />
-        )}
+        {activePage === "Orion" && <OrionPanel />}
         {activePage === "Tools" && <ToolsPage />}
 
         {activePage === "Memory" && (
