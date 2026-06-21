@@ -80,7 +80,7 @@ It provides instant access to AgentOps anywhere on your computer using a global 
 
 ## Privacy First Architecture
 
-Orion is designed to minimize the amount of data sent to the cloud.
+Orion is designed to minimize the amount of data sent to the cloud with privacy abd safety.
 
 ```text
 Screenshot
