@@ -44,19 +44,38 @@
 // }
 // frontend/app/api/assistant/ask/stream/route.ts
 
-import { NextRequest } from "next/server";
+// frontend/app/api/assistant/ask/stream/route.ts
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+
+const BACKEND_URL =
+  process.env.BACKEND_URL || "http://localhost:8000";
 
 export async function POST(req: NextRequest) {
   console.log("========== ORION API ==========");
 
   const body = await req.text();
 
-  const cookie = req.headers.get("cookie") || "";
+  // Raw header cookie
+  const headerCookie = req.headers.get("cookie");
 
-  console.log("COOKIE PRESENT:", !!cookie);
-  console.log("COOKIE LENGTH:", cookie.length);
+  // Next cookie store
+  const cookieStore = await cookies();
+  const token = cookieStore.get("agentops_token")?.value;
+
+  console.log("HEADER COOKIE:", headerCookie);
+  console.log("HEADER COOKIE PRESENT:", !!headerCookie);
+
+  console.log("COOKIE STORE TOKEN:", !!token);
+
+  const cookie = token
+    ? `agentops_token=${token}`
+    : headerCookie || "";
+
+  console.log("FINAL COOKIE PRESENT:", !!cookie);
+  console.log("FINAL COOKIE LENGTH:", cookie.length);
+
   console.log("BACKEND URL:", BACKEND_URL);
 
   try {
