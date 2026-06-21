@@ -23,7 +23,12 @@ async def run_rag_flow(
         "user_id": user_id,
         "threshold": prefs["rag_threshold"],
     })
+    print("\n========== RAW RAG TOOL RESULT ==========")
+    print(result)
+    print("=========================================")
+        
     if not result["chunks"]:
+        print("RETURNING EMPTY RAG RESULT")
         return {
             "type": "rag_answer",
             "chunks": [],
@@ -34,6 +39,7 @@ async def run_rag_flow(
             "sources": [],
             "approved": False,
         }
+    print("RETURNING SUCCESSFUL RAG RESULT")
 
     return {
         "type": "rag_answer",

@@ -787,6 +787,8 @@ async def run_agent(
                 print(len(result.get("chunks", [])))
 
                 print("PUBLISHING TO:", run_id)
+                print("PUBLISHING RESEARCHER EVENT")
+
 
                 await publish_event(
                     run_id,
@@ -801,6 +803,7 @@ async def run_agent(
                         "approved": result["approved"],
                     },
                 )
+                print("RESEARCHER EVENT PUBLISHED")
 
                 status = (
                     "completed"
@@ -820,6 +823,7 @@ async def run_agent(
                         status,
                         db_run_id,
                     )
+                print("PUBLISHING DONE EVENT")
 
                 await publish_event(
                     run_id,
@@ -827,6 +831,7 @@ async def run_agent(
                         "type": "done",
                     },
                 )
+                print("DONE EVENT PUBLISHED")
 
             except Exception as e:
 
@@ -1105,6 +1110,9 @@ async def websocket_endpoint(ws: WebSocket, run_id: str):
                 and not any(event.get("messages", []))
             ):
                 continue
+            print("\n========== WS EVENT ==========")
+            print(event)
+            print("==============================")
 
             await ws.send_json(event)
             if event.get("type") == "done":
