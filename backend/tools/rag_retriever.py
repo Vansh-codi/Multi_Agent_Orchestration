@@ -100,10 +100,22 @@ def rag_tool(
             }
         )
 
-        print("========== CHROMA QUERY ==========")
-        print("FILES:", context_files)
-        print("USER:", user_id)
-        print("MATCHING DOCS:", len(peek.get("ids", [])))
+        print("\n========== CHROMA DEBUG ==========")
+
+        # Everything for this user
+        all_docs = _collection.get(
+            where={"user_id": user_id},
+            include=["metadatas"]
+        )
+
+        print("TOTAL USER DOCS:", len(all_docs.get("ids", [])))
+
+        for meta in all_docs.get("metadatas", [])[:20]:
+            print("META:", meta)
+
+        print("QUERY FILES:", context_files)
+
+        print("==================================")
 
         results = _collection.query(**query_args)
 
@@ -406,6 +418,11 @@ def add_documents(
                 # FIX 6: CSV chunks are all leaf — chunk 0 is not a summary
                 "level": "leaf" if is_csv else ("summary" if idx == 0 else "leaf"),
             })
+        print("\n========== INDEXING ==========")
+        print("FILENAME:", filename)
+        print("USER:", user_id)
+        print("CHUNKS:", len(texts))
+        print("==============================")
 
         _collection.upsert(
             documents=texts,
