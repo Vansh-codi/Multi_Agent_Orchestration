@@ -9,7 +9,7 @@ export default function OrionDownloadPage() {
         </p>
 
         <a
-          href="https://github.com/Vansh-codi/Multi_Agent_Orchestration/releases/download/v1.0.1/Orion.Setup.1.0.0.exe"
+          href="https://github.com/Vansh-codi/Multi_Agent_Orchestration/releases/download/v1.0.9/Orion-Setup-1.0.9.exe"
           download
           className="px-5 py-3 rounded-lg border border-green-500/30"
         >
